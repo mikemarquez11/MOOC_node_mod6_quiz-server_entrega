@@ -13,7 +13,7 @@ const fs = require('fs-extra');
 const T_WAIT = 2; // Time between commands
 const T_TEST = 2 * 60; // Time between tests (seconds)
 const WAIT =  typeof process.env.WAIT !== "undefined"?parseInt(process.env.WAIT):50000;
-const URL = "http://localhost:8000/quizzes";
+const URL = "http://127.0.0.1:8000/quizzes";
 const path_assignment = path.resolve(path.join(__dirname, "../.."));
 const path_file = path.join(path_assignment, "main.js");
 const browser = new Browser({"waitDuration": WAIT, "silent": true});
@@ -115,7 +115,7 @@ describe("Quiz server", function () {
             server.stderr.on('data', function (data) {
                 error_launch += data
             });
-            await Utils.to(timeout(T_WAIT*1000));
+            await Utils.to(timeout(T_WAIT*8000));
             this.msg_err = `Error al lanzar '${path_file}'<<\n\t\t\tRecibido: ${error_launch}`;
             if (error_launch.length) {
                 error_critical = this.msg_err;
