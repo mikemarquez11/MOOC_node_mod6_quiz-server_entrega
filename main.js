@@ -153,6 +153,27 @@ const newView = quiz => {
 // View to show a form to edit a given quiz.
 const editView = (quiz) => {
     // .... introducir código
+    return `<!doctype html>
+  <html>
+  <head>
+    <meta charset="utf-8">
+    <title>Quiz</title>
+    ${style}
+  </head>
+  <body>
+    <h1>Edit Quiz</h1>
+    <form method="POST" action="/quizzes/${quiz.id}?_method=PUT">
+      <label for="question">Question: </label>
+      <input type="text" name="question" value="${quiz.question}" placeholder="Question"> 
+      <br>
+      <label for="answer">Answer: </label>
+      <input type="text" name="answer" value="${quiz.answer}" placeholder="Answer">
+      <input type="submit" class="button" value="Update">
+    </form>
+    <br>
+    <a href="/quizzes" class="button">Go back</a>
+  </body>
+  </html>`;
 }
 
 
@@ -222,18 +243,51 @@ const createController = async (req, res, next) => {
 };
 
 //  GET /quizzes/:id/edit
-const editController = (req, res, next) => {
+const editController = async (req, res, next) => {
     // .... introducir código
+    const { id } = req.params;
+    try {
+        let quiz = await Quiz.findByPk(Number(id));
+        if (!quiz) throw new Error(`  Quiz '${id}' is not in DB`);
+        res.send(editView(quiz));
+    } catch (err) {
+        next(err);
+    }
 };
 
 //  PUT /quizzes/:id
-const updateController = (req, res, next) => {
+const updateController = async (req, res, next) => {
     // .... introducir código
+    const { id } = req.params;
+    const { question, answer } = req.body;
+    
+    try {
+        let quiz = await Quiz.findByPk(Number(id));
+        if (!quiz) throw new Error(`  Quiz '${id}' is not in DB`);
+        
+        quiz.question = question;
+        quiz.answer = answer;
+        await quiz.save({fields: ["question", "answer"]});
+        
+        res.redirect(`/quizzes`);
+    } catch (err) {
+        next(err);
+    }
 };
 
 // DELETE /quizzes/:id
-const destroyController = (req, res, next) => {
+const destroyController = async (req, res, next) => {
     // .... introducir código
+    const { id } = req.params;
+
+    try {
+        let n = await Quiz.destroy({where: {id}});
+        if (n===0) throw new Error(`  ${id} not in DB`);
+        
+        res.redirect(`/quizzes`);
+    } catch (err) {
+        next(err);
+    }
 };
 
 
@@ -250,7 +304,9 @@ app.post('/quizzes', createController);
 //   GET  /quizzes/:id/edit
 //   PUT  /quizzes/:id
 //   DELETE  /quizzes/:id
-
+app.get('/quizzes/:id/edit', editController);
+app.put('/quizzes/:id', updateController);
+app.delete('/quizzes/:id', destroyController);
 
 app.all('*', (req, res) =>
     res.status(404).send("Error: resource not found or method not supported.")
